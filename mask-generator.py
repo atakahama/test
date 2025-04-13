@@ -3,10 +3,11 @@ import shutil
 import glob
 from PIL import Image
 import numpy as np
+import cv2
 
 # 設定
-data_dir = "/path/to/your/data"  # データディレクトリのパスを指定
-original_mask_path = "/path/to/your/mask.png"  # 元になるマスク画像のパス
+data_dir = "plane"  # データディレクトリのパスを指定
+original_mask_path = "mask.png"  # 元になるマスク画像のパス
 
 # 画像フォルダのリスト
 image_folders = ["images", "images_2", "images_4", "images_8"]
@@ -30,7 +31,10 @@ for folder in image_folders:
                   glob.glob(os.path.join(image_folder_path, "*.jpeg"))
     
     # 元のマスク画像を読み込む
-    original_mask = Image.open(original_mask_path)
+    original_mask = Image.open(original_mask_path).convert("L")
+
+    original_mask = np.array(original_mask)
+    #binary_mask = (original_mask > 127).astype(np.uint8)  # 0 or 1
     
     # 各画像に対応するマスクを作成
     for img_path in image_files:
@@ -41,14 +45,18 @@ for folder in image_folders:
         target_img = Image.open(img_path)
         target_size = target_img.size
         
+        
         # マスクをリサイズ
-        resized_mask = original_mask.resize(target_size, Image.LANCZOS)
+        #resized_mask = original_mask.resize(target_size)
+
+        resized_mask = cv2.resize(original_mask, (target_size), interpolation=cv2.INTER_NEAREST)
         
         # マスクの保存パス
         mask_save_path = os.path.join(mask_folder, img_filename)
         
         # マスクを保存
-        resized_mask.save(mask_save_path)
+        #resized_mask.save(mask_save_path)
+        cv2.imwrite(mask_save_path, resized_mask)
         
         print(f"Created mask: {mask_save_path}")
 
